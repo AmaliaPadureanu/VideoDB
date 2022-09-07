@@ -13,10 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static utils.Utils.convertJSONArray;
-import static utils.Utils.watchedMovie;
 
 /**
  * The entry point to this homework. It runs the checker that tests your implentation.
@@ -91,6 +87,12 @@ public final class Main {
                    arrayResult.add(processFavoriteCommand(action, input.getUsers(), writer));
                 } else if (action.getType().equals("view")) {
                     arrayResult.add(processViewCommands(action, input.getUsers(), writer));
+                } else if (action.getType().equals("rating")) {
+                    arrayResult.add(processRatingCommands(action, input.getUsers(), writer));
+                }
+            } else if (action.getActionType().equals("query")) {
+                if (action.getType().equals("average")) {
+                    arrayResult.add(processAverageQuery(action, input.getActors(), writer));
                 }
             }
         }
@@ -121,11 +123,31 @@ public final class Main {
 
         for (UserInputData user : users) {
             if (user.getUsername().equals(action.getUsername())) {
-                if (!user.getHistory().containsValue(action.getTitle())) {
+                if (!user.getHistory().containsKey(action.getTitle())) {
                     obj = writer.writeFile(action.getActionId(), "", "success -> " + action.getTitle() + " was viewed with total views of 1");
                 }
             }
         }
+
+        return obj;
+    }
+
+    public static JSONObject processRatingCommands(ActionInputData action, List<UserInputData> users, Writer writer) throws IOException {
+        JSONObject obj = new JSONObject();
+
+        for (UserInputData user : users) {
+            if (user.getUsername().equals(action.getUsername())) {
+                if (user.getHistory().containsKey(action.getTitle())) {
+                    obj = writer.writeFile(action.getActionId(), "", "success -> " + action.getTitle() + " was rated with " + action.getGrade() + " by " + action.getUsername());
+                }
+            }
+        }
+
+        return obj;
+    }
+
+    public static JSONObject processAverageQuery(ActionInputData action, List<ActorInputData> actors, Writer writer) {
+        JSONObject obj = new JSONObject();
 
         return obj;
     }

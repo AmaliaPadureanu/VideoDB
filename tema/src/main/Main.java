@@ -3,17 +3,20 @@ package main;
 import checker.Checkstyle;
 import checker.Checker;
 import common.Constants;
-import fileio.Input;
-import fileio.InputLoader;
-import fileio.Writer;
+import fileio.*;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static utils.Utils.convertJSONArray;
+import static utils.Utils.watchedMovie;
 
 /**
  * The entry point to this homework. It runs the checker that tests your implentation.
@@ -68,10 +71,64 @@ public final class Main {
         Input input = inputLoader.readData();
 
         Writer fileWriter = new Writer(filePath2);
-        JSONArray arrayResult = new JSONArray();
 
         //TODO add here the entry point to your implementation
 
-        fileWriter.closeJSON(arrayResult);
+       try {
+           fileWriter.closeJSON(processActions(input, fileWriter));
+       } catch (IOException exception) {
+
+       };
     }
+
+    public static JSONArray processActions(Input input, Writer writer) throws IOException {
+        List<ActionInputData> actions = input.getCommands();
+        JSONArray arrayResult = new JSONArray();
+
+        for (ActionInputData action : actions) {
+            if (action.getActionType().equals("command")) {
+                if (action.getType().equals("favorite")) {
+                   arrayResult.add(processFavoriteCommand(action, input.getUsers(), writer));
+                } else if (action.getType().equals("view")) {
+                    arrayResult.add(processViewCommands(action, input.getUsers(), writer));
+                }
+            }
+        }
+
+        return arrayResult;
+    }
+
+    public static JSONObject processFavoriteCommand(ActionInputData action, List<UserInputData> users, Writer writer) throws IOException {
+        JSONObject obj = new JSONObject();
+
+        for (UserInputData user : users) {
+            if (user.getUsername().equals(action.getUsername())) {
+                if (user.getFavoriteMovies().contains(action.getTitle())) {
+                    obj = writer.writeFile(action.getActionId(), "", "error -> " + action.getTitle() +  " is already in favourite list");
+                } else if (!user.getHistory().containsKey(action.getTitle())) {
+                    obj = writer.writeFile(action.getActionId(), "", "error -> " + action.getTitle() + " is not seen");
+                } else {
+                    obj = writer.writeFile(action.getActionId(), "", "success -> " + action.getTitle() + " was added as favourite");
+                }
+            }
+        }
+
+        return obj;
+    }
+
+    public static JSONObject processViewCommands(ActionInputData action, List<UserInputData> users, Writer writer) throws IOException {
+        JSONObject obj = new JSONObject();
+
+        for (UserInputData user : users) {
+            if (user.getUsername().equals(action.getUsername())) {
+                if (!user.getHistory().containsValue(action.getTitle())) {
+                    obj = writer.writeFile(action.getActionId(), "", "success -> " + action.getTitle() + " was viewed with total views of 1");
+                }
+            }
+        }
+
+        return obj;
+    }
+
+
 }

@@ -67,4 +67,15 @@ public final class Input {
     public List<SerialInputData> getSerials() {
         return serialsData;
     }
+
+    @Override
+    public String toString() {
+        return "Input{" +
+                "actorsData=" + actorsData +
+                ", usersData=" + usersData +
+                ", commandsData=" + commandsData +
+                ", moviesData=" + moviesData +
+                ", serialsData=" + serialsData +
+                '}';
+    }
 }

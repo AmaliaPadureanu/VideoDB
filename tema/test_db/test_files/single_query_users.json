@@ -441,6 +441,7 @@
         {
             "action_id": 8,
             "action_type": "command",
+            "action_type": "command",
             "type": "rating",
             "user": "cynicalRaisins2",
             "title": "Drake & Josh",

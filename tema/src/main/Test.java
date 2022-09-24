@@ -31,7 +31,7 @@ public final class Test {
             Arrays.sort(inputDir);
 
             //Scanner scanner = new Scanner(System.in);
-            String fileName = "single_command_view.json";
+            String fileName = "single_command_rating_movie.json";
             for (File file : inputDir) {
                 if (file.getName().equalsIgnoreCase(fileName)) {
                     Main.action(file.getAbsolutePath(), Constants.OUT_FILE);

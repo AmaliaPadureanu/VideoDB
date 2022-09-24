@@ -1,7 +1,8 @@
 package main;
 
-import checker.Checkstyle;
+import actor.ActorsAwards;
 import checker.Checker;
+import checker.Checkstyle;
 import common.Constants;
 import entertainment.Season;
 import fileio.*;
@@ -15,9 +16,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toMap;
+import static utils.Utils.stringToAwards;
 
 /**
  * The entry point to this homework. It runs the checker that tests your implentation.
@@ -27,6 +28,9 @@ public final class Main {
      * for coding style
      */
     public static Map<String, Integer> moviesRatedByUsers = new HashMap<>();
+    public static Map<String, Double> moviesRatings = new HashMap<>();
+    public static Map<String, Integer> usersThatRated = new HashMap<>();
+
 
     private Main() {
     }
@@ -98,11 +102,11 @@ public final class Main {
                 } else if (action.getType().equals("view")) {
                     arrayResult.add(processViewCommands(action, input.getUsers(), writer));
                 } else if (action.getType().equals("rating")) {
-                    arrayResult.add(processRatingCommands(action, input.getUsers(), writer));
+                    arrayResult.add(processRatingCommands(action, input.getUsers(), input.getSerials(), writer));
                 }
             } else if (action.getActionType().equals("query")) {
                 if (action.getCriteria().equals("average") && action.getObjectType().equals("actors")) {
-                    arrayResult.add(processAverageQuery(actions, input.getActors(), writer, input.getUsers(), input.getMovies(), input.getSerials(), action));
+                    arrayResult.add(processAverageQuery(actions, writer, input.getMovies(), input.getSerials(), action));
                 } else if ((action.getCriteria().equals("favorite") && action.getObjectType().equals("movies")) || (action.getCriteria().equals("favorite") && action.getObjectType().equals("shows"))) {
                     arrayResult.add(processFavoriteQuery(action, input.getMovies(), input.getSerials(), input.getUsers(), writer));
                 } else if (action.getCriteria().equals("longest") && action.getObjectType().equals("movies")) {
@@ -111,35 +115,46 @@ public final class Main {
                     arrayResult.add(processLongestShowQuery(action, input.getSerials(), writer));
                 } else if ((action.getCriteria().equals("most_viewed") && action.getObjectType().equals("movies")) || (action.getCriteria().equals("most_viewed") && action.getObjectType().equals("shows"))) {
                     arrayResult.add(processMostViewedMovieQuery(action, input.getMovies(), input.getSerials(), input.getUsers(), writer));
+                } else if (action.getCriteria().equals("awards") && action.getObjectType().equals("actors")) {
+                    arrayResult.add(processAwardsActors(action, input.getActors(), writer));
+                } else if (action.getCriteria().equals("filter_description") && action.getObjectType().equals("actors")) {
+                    arrayResult.add(processFilterDescription(action, input.getActors(), writer));
+                } else if (action.getCriteria().equals("ratings") && action.getObjectType().equals("movies")) {
+                    arrayResult.add(processRatingsMovies(action, input.getMovies(), writer));
+                } else if (action.getCriteria().equals("ratings") && action.getObjectType().equals("shows")) {
+                    arrayResult.add(processRatingsShows(action, input.getSerials(), writer));
+                } else if (action.getCriteria().equals("num_ratings") && action.getObjectType().equals("users")) {
+                    arrayResult.add(processUsersRatings(action, actions, writer));
                 }
             }
         }
-//        System.out.println(arrayResult);
         return arrayResult;
     }
 
     public static JSONObject processFavoriteCommand(ActionInputData action, List<UserInputData> users, Writer writer) throws IOException {
-        JSONObject obj = new JSONObject();
+        JSONObject jsonObject = new JSONObject();
 
         for (UserInputData user : users) {
+
             if (user.getUsername().equals(action.getUsername())) {
                 if (user.getFavoriteMovies().contains(action.getTitle())) {
-                    obj = writer.writeFile(action.getActionId(), "", "error -> " + action.getTitle() +  " is already in favourite list");
+                    jsonObject = writer.writeFile(action.getActionId(), "", "error -> " + action.getTitle() +  " is already in favourite list");
                 } else if (!user.getHistory().containsKey(action.getTitle())) {
-                    obj = writer.writeFile(action.getActionId(), "", "error -> " + action.getTitle() + " is not seen");
+                    jsonObject = writer.writeFile(action.getActionId(), "", "error -> " + action.getTitle() + " is not seen");
                 } else {
-                    obj = writer.writeFile(action.getActionId(), "", "success -> " + action.getTitle() + " was added as favourite");
+                    jsonObject = writer.writeFile(action.getActionId(), "", "success -> " + action.getTitle() + " was added as favourite");
                 }
             }
         }
 
-        return obj;
+        return jsonObject;
     }
 
     public static JSONObject processViewCommands(ActionInputData action, List<UserInputData> users, Writer writer) throws IOException {
         JSONObject obj = new JSONObject();
 
         for(UserInputData user : users) {
+
             if (user.getUsername().equals(action.getUsername())) {
                 if (user.getHistory().containsKey(action.getTitle())) {
                    Integer currentNrOfViews = user.getHistory().get(action.getTitle());
@@ -153,7 +168,7 @@ public final class Main {
         return obj;
     }
 
-    public static JSONObject processRatingCommands(ActionInputData action, List<UserInputData> users, Writer writer) throws IOException {
+    public static JSONObject processRatingCommands(ActionInputData action, List<UserInputData> users, List<SerialInputData> serials, Writer writer) throws IOException {
         JSONObject obj = new JSONObject();
         String currentUserTitle = action.getUsername() + action.getTitle();
 
@@ -166,8 +181,17 @@ public final class Main {
                 } else if (moviesRatedByUsers.containsKey(currentUserTitle) && moviesRatedByUsers.get(currentUserTitle) == action.getSeasonNumber()) {
                     obj = writer.writeFile(action.getActionId(), "", "error -> " + action.getTitle() + " has been already rated");
                 } else {
-                    obj = writer.writeFile(action.getActionId(), "", "success -> " + action.getTitle() + " was rated with " + action.getGrade() + " by " + action.getUsername());
+                    obj = writer.writeFile(action.getActionId(), "",
+                            "success -> " + action.getTitle() +
+                                    " was rated with " + action.getGrade() +
+                                    " by " + action.getUsername());
                     moviesRatedByUsers.put(currentUserTitle, action.getSeasonNumber());
+                    if (usersThatRated.containsKey(currentUser)) {
+                        int value = usersThatRated.get(currentUser);
+                        usersThatRated.put(currentUser, value + 1);
+                    } else {
+                        usersThatRated.put(currentUser, 1);
+                    }
                 }
             }
         }
@@ -175,14 +199,12 @@ public final class Main {
         return obj;
     }
 
-    public static JSONObject processAverageQuery(List<ActionInputData> actions, List<ActorInputData> actors, Writer writer, List<UserInputData> users, List<MovieInputData> movies, List<SerialInputData> serials, ActionInputData action) throws IOException {
+    public static JSONObject processAverageQuery(List<ActionInputData> actions, Writer writer, List<MovieInputData> movies, List<SerialInputData> serials, ActionInputData action) throws IOException {
         JSONObject obj = new JSONObject();
         List<ShowInput> all = new ArrayList<>();
         all.addAll(movies);
         all.addAll(serials);
-
         Map<ShowInput, Double> resultingFilms = new HashMap<>();
-        LinkedHashMap<ShowInput, Double> sortedMap = new LinkedHashMap<>();
         int nr = action.getNumber();
 
         for (ShowInput s : all) {
@@ -246,6 +268,7 @@ public final class Main {
         for (ShowInput video : videos) {
             String year = String.valueOf(video.getYear());
             List<String> genres = video.getGenres();
+
             if (actionYear != null) {
                 if (actionYear.equals(year) && genres.contains(actionGenre)) {
                     filteredMovie = video.getTitle();
@@ -270,7 +293,6 @@ public final class Main {
         } else {
             sorted  = frequency.entrySet().stream().sorted(Map.Entry.comparingByValue())
                     .limit(action.getNumber()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-
         }
 
         result.addAll(sorted.keySet());
@@ -282,7 +304,7 @@ public final class Main {
     public static JSONObject processLongestQuery (ActionInputData action, List<MovieInputData> movies, Writer writer) throws IOException {
         JSONObject obj = new JSONObject();
         Map<String, Integer> moviesWithDuration = new HashMap<>();
-        Map<String, Integer> sorted = new LinkedHashMap<>();
+        Map<String, Integer> sorted;
         String actionYear = action.getFilters().get(0).get(0);
         String actionGender = action.getFilters().get(1).get(0);
         Set<String> result = new LinkedHashSet<>();
@@ -361,7 +383,7 @@ public final class Main {
         String actionGender = action.getFilters().get(1).get(0);
         List<String> filtered = new ArrayList<>();
         Map<String, Integer> moviesViews = new HashMap<>();
-        Map<String, Integer> sorted = new LinkedHashMap<>();
+        Map<String, Integer> sorted;
         Set<String> result = new LinkedHashSet<>();
 
         for (ShowInput video : videos) {
@@ -397,6 +419,189 @@ public final class Main {
         result.addAll(sorted.keySet());
         obj = writer.writeFile(action.getActionId(), "", "Query result: " + result);
         return obj;
+    }
+
+    public static JSONObject processAwardsActors (ActionInputData action, List<ActorInputData> actors, Writer writer) throws IOException {
+        JSONObject obj = new JSONObject();
+        List<String> actionAwards = action.getFilters().get(3);
+        List<ActorsAwards> actorsAwardsList = new ArrayList<>();
+        Map<String, Integer> nrOfAwards = new HashMap<>();
+        Map<String, Integer> sorted;
+        Set<String> result = new LinkedHashSet<>();
+
+        for (String s : actionAwards) {
+            actorsAwardsList.add(stringToAwards(s));
+        }
+
+        for (ActorInputData actor : actors) {
+            if (!(actor.getAwards().isEmpty())) {
+                if ((actor.getAwards().keySet()).containsAll(actorsAwardsList)) {
+                    int sum = actor.getAwards().values().stream().reduce(0, Integer::sum);
+                    nrOfAwards.put(actor.getName(), sum);
+                }
+            }
+        }
+
+        if (action.getSortType().equals("asc")) {
+            sorted = nrOfAwards.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue())
+                    .limit(action.getNumber())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        } else {
+            sorted = nrOfAwards.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .limit(action.getNumber())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        }
+
+        result.addAll(sorted.keySet());
+        obj = writer.writeFile(action.getActionId(), "", "Query result: " + result);
+        return obj;
+    }
+
+    public static JSONObject processFilterDescription (ActionInputData action, List<ActorInputData> actors, Writer writer) throws IOException {
+        JSONObject jsonObject = new JSONObject();
+        List<String> actionWords = action.getFilters().get(2);
+        List<String> filteredActors = new ArrayList<>();
+
+        for (ActorInputData actor : actors) {
+            String actorDescription = actor.getCareerDescription();
+            List<String> temp = new ArrayList<>();
+
+            for (String string : actionWords) {
+                if (actorDescription.indexOf(string) != -1) {
+                    temp.add(string);
+                }
+            }
+
+            if (temp.containsAll(actionWords)) {
+                filteredActors.add(actor.getName());
+            }
+
+            Collections.sort(filteredActors);
+        }
+
+        jsonObject = writer.writeFile(action.getActionId(), "", "Query result: " + filteredActors);
+        return jsonObject;
+    }
+
+    public static JSONObject processRatingsMovies(ActionInputData action, List<MovieInputData> movies, Writer writer) throws IOException {
+        JSONObject jsonObject = new JSONObject();
+        Map<String, Double> moviesWithRating = new HashMap<>();
+        String actionYear = action.getFilters().get(0).get(0);
+        String actionGender = action.getFilters().get(1).get(0);
+        Map<String, Double> sorted;
+        Set<String> result = new LinkedHashSet<>();
+
+        if (action.getSeasonNumber() == 0) {
+            if (moviesRatings.containsKey(action.getTitle())) {
+                Double temp = action.getGrade() + moviesRatings.get(action.getTitle());
+                moviesRatings.put(action.getTitle(), temp);
+            } else {
+                moviesRatings.put(action.getTitle(), action.getGrade());
+            }
+        }
+
+        for (MovieInputData movie : movies) {
+           String year = String.valueOf(movie.getYear());
+           List<String> genres = movie.getGenres();
+           if ((year.equals(actionYear)) && (genres.contains(actionGender))) {
+                if (moviesRatings.keySet().contains(movie.getTitle())) {
+                    moviesWithRating.put(movie.getTitle(), moviesRatings.get(movie.getTitle()));
+                }
+           }
+        }
+
+        if (action.getSortType().equals("asc")) {
+            sorted = moviesWithRating.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue())
+                    .limit(action.getNumber())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        } else {
+            sorted = moviesWithRating.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .limit(action.getNumber())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        }
+
+        result.addAll(sorted.keySet());
+        jsonObject = writer.writeFile(action.getActionId(), "", "Query result: " + result);
+
+        return jsonObject;
+    }
+
+    public static JSONObject processRatingsShows (ActionInputData action, List<SerialInputData> serials, Writer writer) throws IOException {
+        JSONObject jsonObject = new JSONObject();
+        Map<String, Double> moviesWithRating = new HashMap<>();
+        String actionYear = action.getFilters().get(0).get(0);
+        String actionGender = action.getFilters().get(1).get(0);
+        Map<String, Double> sorted;
+        Set<String> result = new LinkedHashSet<>();
+
+        for (SerialInputData serial : serials) {
+            if (serial.getTitle().equals(action.getTitle()) && moviesRatings.containsKey(action.getTitle())) {
+                int nrOfSeasons = serial.getNumberSeason();
+                Double temp = action.getGrade() + moviesRatings.get(action.getTitle());
+                moviesRatings.put(action.getTitle(), temp/nrOfSeasons);
+            } else {
+                moviesRatings.put(action.getTitle(), action.getGrade());
+            }
+        }
+
+        for (SerialInputData serial : serials) {
+            String year = String.valueOf(serial.getYear());
+            List<String> genres = serial.getGenres();
+            if ((year.equals(actionYear)) && (genres.contains(actionGender))) {
+                if (moviesRatings.keySet().contains(serial.getTitle())) {
+                    moviesWithRating.put(serial.getTitle(), moviesRatings.get(serial.getTitle()));
+                }
+            }
+        }
+
+        if (action.getSortType().equals("asc")) {
+            sorted = moviesWithRating.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue())
+                    .limit(action.getNumber())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        } else {
+            sorted = moviesWithRating.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .limit(action.getNumber())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        }
+
+        result.addAll(sorted.keySet());
+        jsonObject = writer.writeFile(action.getActionId(), "", "Query result: " + result);
+        return jsonObject;
+    }
+
+    public static JSONObject processUsersRatings (ActionInputData action, List<ActionInputData> actions, Writer writer) throws IOException {
+        JSONObject jsonObject = new JSONObject();
+        Map<String, Integer> sorted;
+        Set<String> result = new LinkedHashSet<>();
+        Map<String, Integer> ac = new HashMap<>();
+
+        for (ActionInputData a : actions) {
+                if (usersThatRated.containsKey(a.getUsername())) {
+                    ac.put(a.getUsername(), usersThatRated.get(a.getUsername()));
+                }
+        }
+
+        if (action.getSortType().equals("asc")) {
+            sorted = ac.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue())
+                    .limit(action.getNumber())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        } else {
+            sorted = ac.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .limit(action.getNumber())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        }
+
+        result.addAll(sorted.keySet());
+        jsonObject = writer.writeFile(action.getActionId(), "", "Query result: " + result);
+        return jsonObject;
     }
 
 }

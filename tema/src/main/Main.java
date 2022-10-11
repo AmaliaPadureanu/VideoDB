@@ -6,7 +6,6 @@ import checker.Checkstyle;
 import common.Constants;
 import entertainment.Season;
 import fileio.*;
-import lombok.experimental.Helper;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -17,9 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
-import static java.util.stream.Collectors.toMap;
 import static utils.Utils.stringToAwards;
 
 /**
@@ -82,16 +79,16 @@ public final class Main {
 
         initializeMoviesRatings(input);
 
-       try {
-           fileWriter.closeJSON(processActions(input, fileWriter));
-       } catch (IOException exception) {
+        try {
+            fileWriter.closeJSON(processActions(input, fileWriter));
+        } catch (IOException exception) {
 
-       };
+        };
 
-       moviesRatings.clear();
-       moviesRatedByUsers.clear();
-       usersThatRated.clear();
-       moviesViewedByUser.clear();
+        moviesRatings.clear();
+        moviesRatedByUsers.clear();
+        usersThatRated.clear();
+        moviesViewedByUser.clear();
     }
 
     static void initializeMoviesRatings(Input input) {
@@ -103,7 +100,7 @@ public final class Main {
             Map<Integer, List<Double>> allSeasonsRatings = new HashMap<>();
 
             if (show instanceof SerialInputData) {
-                for (int i = 0; i < ((SerialInputData) show).getSeasons().size(); i++) {
+                for (int i = 1; i <= ((SerialInputData) show).getSeasons().size(); i++) {
                     List<Double> ratings = new ArrayList<Double>();
                     allSeasonsRatings.put(i, ratings);
                 }
@@ -123,7 +120,7 @@ public final class Main {
         for (ActionInputData action : actions) {
             if (action.getActionType().equals("command")) {
                 if (action.getType().equals("favorite")) {
-                arrayResult.add(processFavoriteCommand(action, input.getUsers(), writer));
+                    arrayResult.add(processFavoriteCommand(action, input.getUsers(), writer));
                 } else if (action.getType().equals("view")) {
                     arrayResult.add(processViewCommands(action, input.getUsers(), writer));
                 } else if (action.getType().equals("rating")) {
@@ -141,26 +138,17 @@ public final class Main {
                     arrayResult.add(processFavoriteQuery(action, input.getMovies(),
                             input.getSerials(), input.getUsers(), writer));
                 } else if ((action.getCriteria().equals("longest")
-                            && action.getObjectType().equals("movies"))
-                            || (action.getCriteria().equals("longest")
-                            && action.getObjectType().equals("shows"))) {
+                        && action.getObjectType().equals("movies"))
+                        || (action.getCriteria().equals("longest")
+                        && action.getObjectType().equals("shows"))) {
                     arrayResult.add(processLongestQuery(action, input.getMovies(),
                             input.getSerials(), writer));
-
-//                } else if (action.getCriteria().equals("longest")
-//                        && action.getObjectType().equals("movies")) {
-//                    arrayResult.add(processLongestQuery(action, input.getMovies(), writer));
-//                } else if (action.getCriteria().equals("longest")
-//                        && action.getObjectType().equals("shows")) {
-//                    arrayResult.add(processLongestShowQuery(action, input.getSerials(), writer));
-//                }
-
                 }else if ((action.getCriteria().equals("most_viewed")
                         && action.getObjectType().equals("movies"))
                         || (action.getCriteria().equals("most_viewed")
                         && action.getObjectType().equals("shows"))) {
                     arrayResult.add(processMostViewedMovieQuery(action, input.getMovies(),
-                        input.getSerials(), input.getUsers(), writer));
+                            input.getSerials(), input.getUsers(), writer));
                 } else if (action.getCriteria().equals("awards")
                         && action.getObjectType().equals("actors")) {
                     arrayResult.add(processAwardsActors(action, input.getActors(), writer));
@@ -172,15 +160,7 @@ public final class Main {
                         || (action.getCriteria().equals("ratings")
                         && action.getObjectType().equals("shows"))) {
                     arrayResult.add(processRatingsVideos(action, input.getSerials(), input.getMovies(),
-                             writer));
-
-
-//                } else if (action.getCriteria().equals("ratings")
-//                        && action.getObjectType().equals("movies")) {
-//                    arrayResult.add(processRatingsMovies(action, input.getMovies(), writer));
-//                } else if (action.getCriteria().equals("ratings")
-//                        && action.getObjectType().equals("shows")) {
-//                    arrayResult.add(processRatingsShows(action, input.getSerials(),input.getMovies(), writer));
+                            writer));
                 } else if (action.getCriteria().equals("num_ratings")
                         && action.getObjectType().equals("users")) {
                     arrayResult.add(processUsersRatings(action, actions, writer));
@@ -188,19 +168,19 @@ public final class Main {
             } else if (action.getActionType().equals("recommendation")) {
                 if (action.getType().equals("standard")) {
                     arrayResult.add(processStandardRecommendation(action, input.getUsers(),
-                        input.getMovies(), input.getSerials(), writer));
+                            input.getMovies(), input.getSerials(), writer));
                 } else if (action.getType().equals("best_unseen")) {
                     arrayResult.add(processBestUnseenRecommendation(action, input.getUsers(),
-                        input.getMovies(), input.getSerials(), writer));
+                            input.getMovies(), input.getSerials(), writer));
                 } else if (action.getType().equals("popular")) {
                     arrayResult.add(processPopularRecommendation(action, input.getUsers(),
-                        input.getMovies(), input.getSerials(), writer));
+                            input.getMovies(), input.getSerials(), writer));
                 } else if (action.getType().equals("favorite")) {
                     arrayResult.add(processFavoriteRecommendation(action, input.getUsers(),
-                        input.getMovies(), input.getSerials(), writer));
+                            input.getMovies(), input.getSerials(), writer));
                 } else if (action.getType().equals("search")) {
                     arrayResult.add(processSearchRecommendation(action, input.getUsers(),
-                        input.getMovies(), input.getSerials(), writer));
+                            input.getMovies(), input.getSerials(), writer));
                 }
             }
         }
@@ -222,11 +202,13 @@ public final class Main {
 
             boolean isValid = true;
 
-            if (!actionsYear.contains(null) && !actionsYear.contains(String.valueOf(movie.getYear()))) {
+            if (!actionsYear.contains(null)
+                    && !actionsYear.contains(String.valueOf(movie.getYear()))) {
                 isValid = false;
             }
 
-            if (!actionsGenre.contains(null) && !movie.getGenres().containsAll(actionsGenre)) {
+            if (!actionsGenre.contains(null)
+                    && !movie.getGenres().containsAll(actionsGenre)) {
                 isValid = false;
             }
 
@@ -252,11 +234,13 @@ public final class Main {
 
             boolean isValid = true;
 
-            if (!actionsYear.contains(null) && !actionsYear.contains(String.valueOf(serial.getYear()))) {
+            if (!actionsYear.contains(null)
+                    && !actionsYear.contains(String.valueOf(serial.getYear()))) {
                 isValid = false;
             }
 
-            if (!actionsGenre.contains(null) && !serial.getGenres().containsAll(actionsGenre)) {
+            if (!actionsGenre.contains(null)
+                    && !serial.getGenres().containsAll(actionsGenre)) {
                 isValid = false;
             }
 
@@ -267,13 +251,14 @@ public final class Main {
         return filtered;
     }
 
-    public static List<String> filteredActors(ActionInputData action, List<ActorInputData> actors) {
-        List<String> actionsWards = action.getFilters().get(2);
+    public static List<String> filteredActors(ActionInputData action,
+        List<ActorInputData> actors) {
+        List<String> actionsWords = action.getFilters().get(2);
         List<String> actionsAwards = action.getFilters().get(3);
         List<String> filtered = new ArrayList<>();
 
         for (ActorInputData actor : actors) {
-            if (actionsWards == null && actionsAwards == null) {
+            if (actionsWords == null && actionsAwards == null) {
                 for (ActorInputData act : actors) {
                     filtered.add(act.getName());
                 }
@@ -282,8 +267,8 @@ public final class Main {
 
             boolean isValid = true;
 
-            if (actionsWards !=null) {
-                for (String word : actionsWards) {
+            if (actionsWords !=null) {
+                for (String word : actionsWords) {
                     if (!actor.getCareerDescription().contains(word)) {
                         isValid = false;
                         break;
@@ -294,10 +279,10 @@ public final class Main {
 
             if (actionsAwards != null) {
                 for (String award : actionsAwards)
-                if (!actor.getAwards().keySet().contains(award)) {
-                    isValid = false;
-                    break;
-                }
+                    if (!actor.getAwards().keySet().contains(award)) {
+                        isValid = false;
+                        break;
+                    }
                 isValid = false;
             }
 
@@ -332,15 +317,15 @@ public final class Main {
     }
 
     public static JSONObject processViewCommands(ActionInputData action,
-        List<UserInputData> users, Writer writer) throws IOException {
+                                                 List<UserInputData> users, Writer writer) throws IOException {
         JSONObject jsonObject = new JSONObject();
         String currentUserTitle = action.getUsername() + action.getTitle();
 
         for(UserInputData user : users) {
             if (user.getUsername().equals(action.getUsername())) {
                 if (user.getHistory().containsKey(action.getTitle())) {
-                   Integer currentNrOfViews = user.getHistory().get(action.getTitle());
-                   currentNrOfViews++;
+                    Integer currentNrOfViews = user.getHistory().get(action.getTitle());
+                    currentNrOfViews++;
                     jsonObject = writer.writeFile(action.getActionId(), "",
                             "success -> " + action.getTitle()
                                     + " was viewed with total views of " + currentNrOfViews);
@@ -364,7 +349,7 @@ public final class Main {
     }
 
     public static JSONObject processRatingCommands(ActionInputData action,
-        List<UserInputData> users, Writer writer) throws IOException {
+                                                   List<UserInputData> users, Writer writer) throws IOException {
         JSONObject obj = new JSONObject();
         String currentUserTitle = action.getUsername() + action.getTitle();
 
@@ -404,58 +389,72 @@ public final class Main {
     }
 
     public static JSONObject processAverageQuery(List<ActionInputData> actions,
-        Writer writer, List<MovieInputData> movies, List<SerialInputData> serials,
-            ActionInputData action, List <ActorInputData> actors) throws IOException {
+                                                 Writer writer, List<MovieInputData> movies, List<SerialInputData> serials,
+                                                 ActionInputData action, List <ActorInputData> actors) throws IOException {
         JSONObject obj = new JSONObject();
         List<String> result = new ArrayList<>();
-        List<String> filtered;
-        filtered = filteredActors(action, actors);
+        List<String> filtered = filteredActors(action, actors);
         Map<String, Double> sorted;
-        Map<String, Double> videosContainingActors = new HashMap<>();
-        Map<String, Double> actorsGrades = new HashMap<>();
-
-        System.out.println(moviesRatings);
-
+        Map<String, List<Double>> videosContainingActors = new HashMap<>();
 
         for (String actor : filtered) {
             for (MovieInputData movie : movies) {
                 if (movie.getCast().contains(actor) && moviesRatings.keySet().contains(movie.getTitle())) {
-                    double average = Helpers.getRatingAverageForShow(moviesRatings.get(movie.getTitle()));
-                    videosContainingActors.put(actor, average);
+                    Double average = Helpers.getRatingAverageForShow(moviesRatings.get(movie.getTitle()));
+
+                    if (!videosContainingActors.containsKey(actor)) {
+                        videosContainingActors.put(actor, new ArrayList<>());
+                    }
+
+                    if (average > 0) {
+                        videosContainingActors.get(actor).add(average);
+                    }
                 }
             }
 
             for (SerialInputData serial : serials) {
                 if (serial.getCast().contains(actor) && moviesRatings.keySet().contains(serial.getTitle())) {
-                    double averageSerial = Helpers.getRatingAverageForShow(moviesRatings.get(serial.getTitle()));
-                    videosContainingActors.put(actor, averageSerial);
+                    Double averageSerial = Helpers.getRatingAverageForShow(moviesRatings.get(serial.getTitle()));
+
+                    if (!videosContainingActors.containsKey(actor)) {
+                        videosContainingActors.put(actor, new ArrayList<>());
+                    }
+
+                    if (averageSerial > 0) {
+                        videosContainingActors.get(actor).add(averageSerial);
+                    }
                 }
             }
         }
 
-        //System.out.println(videosContainingActors);
+        videosContainingActors = videosContainingActors.entrySet()
+                .stream()
+                .filter(e -> !e.getValue().isEmpty())
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));;
 
-        for (Map.Entry<String, Double> entry : videosContainingActors.entrySet()) {
-            if (entry.getValue() != null) {
-                actorsGrades.put(entry.getKey(), entry.getValue());
-            }
-        }
-
-//        System.out.println(actorsGrades);
+        Map<String, Double> actorRatings =
+                videosContainingActors.entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e-> e.getValue()
+                                        .stream()
+                                        .mapToDouble(Double::doubleValue)
+                                        .average()
+                                        .getAsDouble()));
 
         if (action.getSortType().equals("desc")) {
-            sorted  = actorsGrades.entrySet().stream()
+            sorted  = actorRatings.entrySet().stream()
                     .sorted(Helpers.ascDoubleComparator.reversed())
-                    .limit(action.getNumber()).collect(Collectors.toMap(Map.Entry::getKey,
+                    .limit(action.getNumber())
+                    .collect(Collectors.toMap(Map.Entry::getKey,
                             Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         } else {
-            sorted  = actorsGrades.entrySet().stream()
+            sorted  = actorRatings.entrySet().stream()
                     .sorted(Helpers.ascDoubleComparator)
                     .limit(action.getNumber()).collect(Collectors.toMap(
                             Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         }
-
-        System.out.println(sorted);
 
         result.addAll(sorted.keySet());
 
@@ -464,12 +463,12 @@ public final class Main {
     }
 
     public static JSONObject processFavoriteQuery (ActionInputData action,
-        List<MovieInputData> movies,List<SerialInputData> serials,
-            List<UserInputData> users, Writer writer) throws IOException {
+                                                   List<MovieInputData> movies,List<SerialInputData> serials,
+                                                   List<UserInputData> users, Writer writer) throws IOException {
         JSONObject obj = new JSONObject();
 
         List<String> totalFavorites = new ArrayList<>();
-       List<String> filtered = new ArrayList<>();
+        List<String> filtered = new ArrayList<>();
         String filteredMovie;
         Map<String, Integer> frequency = new HashMap<>();
         Map<String, Integer> sorted;
@@ -497,10 +496,10 @@ public final class Main {
         }
 
         if (action.getSortType().equals("desc")) {
-           sorted  = frequency.entrySet().stream()
-                   .sorted(Helpers.ascComparator.reversed())
-                   .limit(action.getNumber()).collect(Collectors.toMap(Map.Entry::getKey,
-                           Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            sorted  = frequency.entrySet().stream()
+                    .sorted(Helpers.ascComparator.reversed())
+                    .limit(action.getNumber()).collect(Collectors.toMap(Map.Entry::getKey,
+                            Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         } else {
             sorted  = frequency.entrySet().stream()
                     .sorted(Helpers.ascComparator)
@@ -515,7 +514,7 @@ public final class Main {
     }
 
     public static JSONObject processLongestQuery (ActionInputData action,
-        List<MovieInputData> movies, List<SerialInputData> serials, Writer writer) throws IOException {
+                                                  List<MovieInputData> movies, List<SerialInputData> serials, Writer writer) throws IOException {
         JSONObject obj = new JSONObject();
         List<String> filtered = new ArrayList<>();
         Map<String, Integer> videosWithDuration = new HashMap<>();
@@ -534,9 +533,9 @@ public final class Main {
             for (SerialInputData serial : serials) {
                 if (filtered.contains(serial.getTitle())) {
                     int sumSeasons = 0;
-                   for (Season season : serial.getSeasons()) {
-                       sumSeasons += season.getDuration();
-                   }
+                    for (Season season : serial.getSeasons()) {
+                        sumSeasons += season.getDuration();
+                    }
                     videosWithDuration.put(serial.getTitle(), sumSeasons);
                 }
             }
@@ -558,91 +557,9 @@ public final class Main {
         return obj;
     }
 
-//    public static JSONObject processLongestQuery (ActionInputData action,
-//        List<MovieInputData> movies, Writer writer) throws IOException {
-//        JSONObject obj = new JSONObject();
-//        Map<String, Integer> moviesWithDuration = new HashMap<>();
-//        Map<String, Integer> sorted;
-//        String actionYear = action.getFilters().get(0).get(0);
-//        String actionGender = action.getFilters().get(1).get(0);
-//        Set<String> result = new LinkedHashSet<>();
-//
-//        for (MovieInputData movie : movies) {
-//            String year = String.valueOf(movie.getYear());
-//            List<String> genres = movie.getGenres();
-//            if (actionYear != null) {
-//                if (actionYear.equals(year) && genres.contains(actionGender)) {
-//                    moviesWithDuration.put(movie.getTitle(), movie.getDuration());
-//                }
-//            }
-//        }
-//
-//        if (action.getSortType().equals("asc")) {
-//            sorted = moviesWithDuration.entrySet().stream()
-//                    .sorted(Map.Entry.comparingByValue())
-//                    .limit(action.getNumber()).collect(Collectors.toMap(Map.Entry::getKey,
-//                            Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-//        } else {
-//            sorted = moviesWithDuration.entrySet().stream()
-//                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-//                    .limit(action.getNumber()).collect(Collectors.toMap(Map.Entry::getKey,
-//                            Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-//        }
-//
-//        result.addAll(sorted.keySet());
-//        obj = writer.writeFile(action.getActionId(), "", "Query result: " + result);
-//        return obj;
-//    }
-//
-//    public static JSONObject processLongestShowQuery (ActionInputData action,
-//        List<SerialInputData> serials, Writer writer) throws IOException {
-//        JSONObject obj = new JSONObject();
-//        String actionYear = action.getFilters().get(0).get(0);
-//        String actionGender = action.getFilters().get(1).get(0);
-//        List<SerialInputData> filtered = new ArrayList<>();
-//        Map<String, Integer> serialsWithDuration = new HashMap<>();
-//        Map<String, Integer> sorted;
-//        Set<String> result = new HashSet<>();
-//
-//        for (SerialInputData serial : serials) {
-//            String year = String.valueOf(serial.getYear());
-//            List<String> genres = serial.getGenres();
-//            if (actionYear != null) {
-//                if (actionYear.equals(year) && genres.contains(actionGender)) {
-//                    filtered.add(serial);
-//                }
-//            }
-//        }
-//
-//        for (SerialInputData s : filtered) {
-//            ArrayList<Season> seasons = s.getSeasons();
-//            int total = 0;
-//            for (Season currentSeasion : seasons) {
-//                total += currentSeasion.getDuration();
-//            }
-//            serialsWithDuration.put(s.getTitle(), total);
-//        }
-//
-//        if (action.getSortType().equals("asc")) {
-//            sorted = serialsWithDuration.entrySet().stream()
-//                    .sorted(Map.Entry.comparingByValue())
-//                    .limit(action.getNumber()).collect(Collectors.toMap(Map.Entry::getKey,
-//                            Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-//        } else {
-//            sorted = serialsWithDuration.entrySet().stream()
-//                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-//                    .limit(action.getNumber()).collect(Collectors.toMap(Map.Entry::getKey,
-//                            Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-//        }
-//
-//        result.addAll(sorted.keySet());
-//        obj = writer.writeFile(action.getActionId(), "", "Query result: " + result);
-//        return obj;
-//    }
-
     public static JSONObject processMostViewedMovieQuery (ActionInputData action,
-        List<MovieInputData> movies, List<SerialInputData> serials,
-            List<UserInputData> users, Writer writer) throws IOException {
+                                                          List<MovieInputData> movies, List<SerialInputData> serials,
+                                                          List<UserInputData> users, Writer writer) throws IOException {
         JSONObject obj = new JSONObject();
         List<String> filtered = new ArrayList<>();
         Map<String, Integer> moviesViews = new HashMap<>();
@@ -679,26 +596,13 @@ public final class Main {
                             Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         }
 
-
         result.addAll(sorted.keySet());
         obj = writer.writeFile(action.getActionId(), "", "Query result: " + result);
         return obj;
     }
 
-//    private static boolean compareLists(ArrayList<String> list1, ArrayList<String> list2) {
-//        int count = Math.min(list1.size(), list2.size());
-//
-//        for (int i = 0; i < list1.size(); i++) {
-//            if (list1.get(1) != list2.get(1)) {
-//                return false;
-//            }
-//        }
-//
-//        return true;
-//    }
-
     public static JSONObject processAwardsActors (ActionInputData action,
-        List<ActorInputData> actors, Writer writer) throws IOException {
+                                                  List<ActorInputData> actors, Writer writer) throws IOException {
         JSONObject obj = new JSONObject();
         List<String> actionAwards = action.getFilters().get(3);
         List<ActorsAwards> actorsAwardsList = new ArrayList<>();
@@ -737,15 +641,14 @@ public final class Main {
     }
 
     public static JSONObject processFilterDescription (ActionInputData action,
-        List<ActorInputData> actors, Writer writer) throws IOException {
+                                                       List<ActorInputData> actors, Writer writer) throws IOException {
         JSONObject jsonObject = new JSONObject();
         List<String> actionWords = action.getFilters().get(2);
         List<String> filteredActors = new ArrayList<>();
 
         for (ActorInputData actor : actors) {
-            //System.out.println(actor.getName());
             List<String> partialActionWords = new ArrayList<>();
-            String[] actorDescription = actor.getCareerDescription().toLowerCase().split("[ -]");
+            String[] actorDescription = actor.getCareerDescription().toLowerCase().split("[ -.]");
 
             for (String actionWord : actionWords) {
                 if (Arrays.stream(actorDescription).toList().contains(actionWord)) {
@@ -755,7 +658,6 @@ public final class Main {
 
             if (partialActionWords.containsAll(actionWords)) {
                 filteredActors.add(actor.getName());
-                //System.out.println(actor.getName());
             }
 
 
@@ -771,49 +673,8 @@ public final class Main {
         return jsonObject;
     }
 
-//    public static JSONObject processRatingsMovies(ActionInputData action,
-//        List<MovieInputData> movies, Writer writer) throws IOException {
-//        JSONObject jsonObject = new JSONObject();
-//        Map<String, Double> moviesWithRating = new HashMap<>();
-//        String actionYear = action.getFilters().get(0).get(0);
-//        String actionGender = action.getFilters().get(1).get(0);
-//        Map<String, Double> sorted;
-//        Set<String> result = new LinkedHashSet<>();
-//
-//        for (MovieInputData movie : movies) {
-//            String year = String.valueOf(movie.getYear());
-//            List<String> genres = movie.getGenres();
-//
-//            if ((year.equals(actionYear)) && (genres.contains(actionGender))) {
-//                if (moviesRatings.keySet().contains(movie.getTitle())) {
-//                    double average = Helpers.movieRatingsAverage(moviesRatings, movie.getTitle());
-//                    moviesWithRating.put(movie.getTitle(), average);
-//                }
-//            }
-//        }
-//
-//        if (action.getSortType().equals("asc")) {
-//            sorted = moviesWithRating.entrySet().stream()
-//                    .sorted(Map.Entry.comparingByValue())
-//                    .limit(action.getNumber())
-//                    .collect(Collectors.toMap(Map.Entry::getKey,
-//                            Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-//        } else {
-//            sorted = moviesWithRating.entrySet().stream()
-//                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-//                    .limit(action.getNumber())
-//                    .collect(Collectors.toMap(Map.Entry::getKey,
-//                            Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-//        }
-//
-//        result.addAll(sorted.keySet());
-//        jsonObject = writer.writeFile(action.getActionId(), "", "Query result: " + result);
-//
-//        return jsonObject;
-//    }
-
     public static JSONObject processRatingsVideos (ActionInputData action,
-        List<SerialInputData> serials, List<MovieInputData> movies, Writer writer) throws IOException {
+                                                   List<SerialInputData> serials, List<MovieInputData> movies, Writer writer) throws IOException {
         JSONObject jsonObject = new JSONObject();
         List<String> filtered = new ArrayList<>();
         Map<String, Double> moviesWithRating = new HashMap<>();
@@ -856,55 +717,22 @@ public final class Main {
                             Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         }
 
-//        Map<String, Double> moviesWithRating = new HashMap<>();
-//        String actionYear = action.getFilters().get(0).get(0);
-//        String actionGender = action.getFilters().get(1).get(0);
-//        Map<String, Double> sorted;
-//        Set<String> result = new LinkedHashSet<>();
-//
-//        for (SerialInputData serial : serials) {
-//            String year = String.valueOf(serial.getYear());
-//            List<String> genres = serial.getGenres();
-//            if ((year.equals(actionYear)) && (genres.contains(actionGender))) {
-//                if (moviesRatings.keySet().contains(serial.getTitle())) {
-//                    double average = Helpers.serialRatingAverage(moviesRatings, serial.getTitle(), serials);
-//                    moviesWithRating.put(serial.getTitle(), average);
-//                }
-//            }
-//        }
-//
-//        System.out.println(moviesWithRating);
-//
-//        if (action.getSortType().equals("asc")) {
-//            sorted = moviesWithRating.entrySet().stream()
-//                    .sorted(Map.Entry.comparingByValue())
-//                    .limit(action.getNumber())
-//                    .collect(Collectors.toMap(Map.Entry::getKey,
-//                            Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-//        } else {
-//            sorted = moviesWithRating.entrySet().stream()
-//                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-//                    .limit(action.getNumber())
-//                    .collect(Collectors.toMap(Map.Entry::getKey,
-//                            Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-//        }
-//
         result.addAll(sorted.keySet());
         jsonObject = writer.writeFile(action.getActionId(), "", "Query result: " + result);
         return jsonObject;
     }
 
     public static JSONObject processUsersRatings (ActionInputData action,
-        List<ActionInputData> actions, Writer writer) throws IOException {
+                                                  List<ActionInputData> actions, Writer writer) throws IOException {
         JSONObject jsonObject = new JSONObject();
         Map<String, Integer> sorted;
         Set<String> result = new LinkedHashSet<>();
         Map<String, Integer> ac = new HashMap<>();
 
         for (ActionInputData a : actions) {
-                if (usersThatRated.containsKey(a.getUsername())) {
-                    ac.put(a.getUsername(), usersThatRated.get(a.getUsername()));
-                }
+            if (usersThatRated.containsKey(a.getUsername())) {
+                ac.put(a.getUsername(), usersThatRated.get(a.getUsername()));
+            }
         }
 
         if (action.getSortType().equals("desc")) {
@@ -925,8 +753,8 @@ public final class Main {
     }
 
     public static JSONObject processStandardRecommendation(ActionInputData action,
-        List<UserInputData> users, List<MovieInputData> movies, List<SerialInputData> serials,
-            Writer writer) throws IOException {
+                                                           List<UserInputData> users, List<MovieInputData> movies, List<SerialInputData> serials,
+                                                           Writer writer) throws IOException {
         JSONObject jsonObject = new JSONObject();
         Set<String> seenByUser = new HashSet<>();
         LinkedHashSet<String> unseen = new LinkedHashSet<>();
@@ -966,8 +794,8 @@ public final class Main {
     }
 
     public static JSONObject processBestUnseenRecommendation(ActionInputData action,
-        List<UserInputData> users, List<MovieInputData> movies, List<SerialInputData> serials,
-             Writer writer) throws IOException {
+    List<UserInputData> users, List<MovieInputData> movies, List<SerialInputData> serials,
+    Writer writer) throws IOException {
         JSONObject jsonObject = new JSONObject();
         String best = new String();
         Set<String> seenByUser = new HashSet<>();
@@ -976,7 +804,8 @@ public final class Main {
         videos.addAll(movies);
         videos.addAll(serials);
 
-        Map<String, Double> averageRatings = Helpers.getMapKeyTitleValueAverageRatings(moviesRatings);
+        Map<String, Double> averageRatings = Helpers
+                .getMapKeyTitleValueAverageRatings(moviesRatings);
 
         Map<String, Double> sorted = averageRatings.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
@@ -988,15 +817,12 @@ public final class Main {
                 seenByUser = user.getHistory().keySet();
 
                 for (String bestRated : sorted.keySet()) {
-
                     if (!seenByUser.contains(bestRated)) {
                         result = bestRated;
-                        jsonObject = writer.writeFile(action.getActionId(), "",
-                                "BestRatedUnseenRecommendation result: " + result);
-                        return jsonObject;
+                        return writer.writeFile(action.getActionId(), "",
+                                "BestRatedUnseenRecommendation result: " + bestRated);
                     }
                 }
-
             }
         }
 
@@ -1015,31 +841,23 @@ public final class Main {
             }
         }
 
-        jsonObject = writer.writeFile(action.getActionId(), "",
+        return writer.writeFile(action.getActionId(), "",
                 "BestRatedUnseenRecommendation cannot be applied!");
-        return jsonObject;
     }
 
     public static JSONObject processPopularRecommendation(ActionInputData action,
-         List<UserInputData> users, List<MovieInputData> movies,
-             List<SerialInputData> serials, Writer writer) throws IOException {
-        JSONObject jsonObject = new JSONObject();
+    List<UserInputData> users, List<MovieInputData> movies,
+    List<SerialInputData> serials, Writer writer) throws IOException {
         List<ShowInput> videos = new ArrayList<>();
         videos.addAll(movies);
         videos.addAll(serials);
-        String result = new String();
         Map<String, Integer> nrOfViews = new HashMap<>();
         List<String> mostPopularGenre = new ArrayList<>();
         List<String> videosInAlphaOrder = new ArrayList<>();
 
-        for (UserInputData user : users) {
-            if (user.getUsername().equals(action.getUsername())) {
-                if (!user.getSubscriptionType().equals("PREMIUM")) {
-                    jsonObject = writer.writeFile(action.getActionId(), "",
-                            "PopularRecommendation cannot be applied!");
-                    return jsonObject;
-                }
-            }
+        if (Helpers.isPremium(users, action.getUsername())) {
+            return writer.writeFile(action.getActionId(), "",
+                    "PopularRecommendation cannot be applied!");
         }
 
         for (UserInputData user : users) {
@@ -1083,56 +901,40 @@ public final class Main {
                 if (user.getUsername().equals(action.getUsername())) {
                     for (String videoTitle : videosInAlphaOrder) {
                         if (!user.getHistory().keySet().contains(videoTitle)) {
-                            result = videoTitle;
-                            jsonObject = writer.writeFile(action.getActionId(), "",
-                                    "PopularRecommendation result: " + result);
-                            return jsonObject;
+                            return writer.writeFile(action.getActionId(), "",
+                                    "PopularRecommendation result: " + videoTitle);
                         }
                     }
                 }
             }
         }
 
-        jsonObject = writer.writeFile(action.getActionId(), "",
+        return writer.writeFile(action.getActionId(), "",
                 "PopularRecommendation cannot be applied!");
-        return jsonObject;
     }
 
     public static JSONObject processFavoriteRecommendation(ActionInputData action,
-        List<UserInputData> users, List<MovieInputData> movies, List<SerialInputData> serials,
-            Writer writer) throws IOException {
-        JSONObject jsonObject = new JSONObject();
-        Map<String, Integer> nrOfFavorites = new HashMap<>();
-        Map<String, Integer> sorted;
-        List<String> favorites = new ArrayList<>();
-        String result = "";
-        List<ShowInput> videos = new ArrayList<>();
-        videos.addAll(movies);
-        videos.addAll(serials);
-
-        for (UserInputData user : users) {
-            if (user.getUsername().equals(action.getUsername())) {
-                if (!user.getSubscriptionType().equals("PREMIUM")) {
-                    jsonObject = writer.writeFile(action.getActionId(), "",
-                            "FavoriteRecommendation cannot be applied!");
-                    return jsonObject;
-                }
-            }
+    List<UserInputData> users, List<MovieInputData> movies, List<SerialInputData> serials,
+    Writer writer) throws IOException {
+        if (Helpers.isPremium(users, action.getUsername())) {
+           return writer.writeFile(action.getActionId(), "",
+                    "FavoriteRecommendation cannot be applied!");
         }
 
-        for (UserInputData user : users) {
-            if (!user.getUsername().equals(action.getUsername())) {
-                favorites.addAll(user.getFavoriteMovies());
-            }
-        }
+        List<String> favorites = users.stream()
+                .map(user -> user.getFavoriteMovies())
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
 
         Set<String> countFavorites = new HashSet<>(favorites);
+        Map<String, Integer> nrOfFavorites = new HashMap<>();
+
         for (String title : countFavorites) {
             nrOfFavorites.put(title, Collections.frequency(favorites, title));
         }
 
-        sorted  = nrOfFavorites.entrySet().stream()
-                .sorted(Helpers.ascComparator.reversed())
+        Map<String, Integer> sorted = nrOfFavorites.entrySet().stream()
+                .sorted(Helpers.nonAlphabeticComparator.reversed())
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
@@ -1140,78 +942,68 @@ public final class Main {
             if (user.getUsername().equals(action.getUsername())) {
                 for (String key : sorted.keySet()) {
                     if (!user.getHistory().containsKey(key)) {
-                        result = key;
-                        jsonObject = writer.writeFile(action.getActionId(), "",
-                                "FavoriteRecommendation result: " + result);
-                        return jsonObject;
+                        return writer.writeFile(action.getActionId(), "",
+                                "FavoriteRecommendation result: " + key);
                     }
                 }
             }
         }
-        jsonObject = writer.writeFile(action.getActionId(), "",
-                "FavoriteRecommendation cannot be applied!");
 
-        return jsonObject;
+        return writer.writeFile(action.getActionId(), "",
+                "FavoriteRecommendation cannot be applied!");
     }
 
     public static JSONObject processSearchRecommendation(ActionInputData action,
-        List<UserInputData> users, List<MovieInputData> movies, List<SerialInputData> serials,
-            Writer writer) throws IOException {
-        JSONObject jsonObject = new JSONObject();
+                                                         List<UserInputData> users, List<MovieInputData> movies, List<SerialInputData> serials,
+                                                         Writer writer) throws IOException {
         List<ShowInput> videos = new ArrayList<>();
         videos.addAll(movies);
         videos.addAll(serials);
-        List<String> notSeen = new ArrayList<>();
-        List<String> result;
-        Map<String, Double> ratingsGenre = new HashMap<>();
-        Set<String> resultt = new LinkedHashSet<>();
+        List<ShowInput> actionGenreVideos = new ArrayList<>();
+        Map<String, Double> videosByRatings = new HashMap<>();
+        Map<String, Double> sorted = new HashMap<>();
+        Set<String> result = new LinkedHashSet<>();
 
-        List<String> allGenres = new ArrayList<>();
-        for (ShowInput video : videos) {
-            allGenres.addAll(video.getGenres());
-        }
-
-        if (!allGenres.contains(action.getGenre())) {
-            jsonObject = writer.writeFile(action.getActionId(), "",
+        if (Helpers.isPremium(users, action.getUsername())) {
+            return writer.writeFile(action.getActionId(), "",
                     "SearchRecommendation cannot be applied!");
-            return jsonObject;
         }
 
-        Map<String, Double> averageRatings = Helpers.getMapKeyTitleValueAverageRatings(moviesRatings);
+        for (ShowInput video : videos) {
+            if (video.getGenres().contains(action.getGenre())) {
+                actionGenreVideos.add(video);
+            }
+        }
 
-        Map<String, Double> sorted = averageRatings.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue())
+        Map<String, Double> videosRatings = Helpers.getMapKeyTitleValueAverageRatings(moviesRatings);
+
+        for (ShowInput video : actionGenreVideos) {
+            if (videosRatings.containsKey(video.getTitle())) {
+                videosByRatings.put(video.getTitle(), videosRatings.get(video.getTitle()));
+            } else {
+                videosByRatings.put(video.getTitle(), 0.0);
+            }
+        }
+
+        sorted  = videosByRatings.entrySet().stream()
+                .sorted(Helpers.ascDoubleComparator)
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
         for (UserInputData user : users) {
             if (user.getUsername().equals(action.getUsername())) {
-                for (ShowInput video : videos) {
-                    if (!user.getHistory().containsKey(video.getTitle()) && video.getGenres().contains(action.getGenre())) {
-                        notSeen.add(video.getTitle());
+                for (String videoTitle : sorted.keySet()) {
+                    if (!user.getHistory().containsKey(videoTitle)) {
+                        result.add(videoTitle);
                     }
                 }
             }
         }
 
-        if (notSeen.isEmpty()) {
-            jsonObject = writer.writeFile(action.getActionId(), "",
-                    "SearchRecommendation cannot be applied!");
-            return jsonObject;
-        } else  {
-            notSeen.stream().sorted().collect(Collectors.toList());
-            resultt.addAll(notSeen);
+        if (result.isEmpty()) {
+            return writer.writeFile(action.getActionId(), "", "SearchRecommendation cannot be applied!" );
         }
-        jsonObject = writer.writeFile(action.getActionId(), "", "SearchRecommendation result: " + resultt);
 
-//        if (resultt.isEmpty()) {
-//            jsonObject = writer.writeFile(action.getActionId(), "",
-//                    "SearchRecommendation cannot be applied!");
-//            return jsonObject;
-//        }
-//
-//        jsonObject = writer.writeFile(action.getActionId(), "", "SearchRecommendation result: " + resultt);
-//        System.out.println(resultt);
-        return jsonObject;
+        return writer.writeFile(action.getActionId(), "", "SearchRecommendation result: " + result);
     }
 }

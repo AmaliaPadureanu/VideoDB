@@ -1,6 +1,7 @@
 package main;
 
 import fileio.SerialInputData;
+import fileio.UserInputData;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,20 +35,29 @@ public class Helpers {
         }
     };
 
-    static double getRatingAverageForShow(Map<Integer, List<Double>> seasonRatings) {
-        if (seasonRatings == null) { return 0; }
+    static Comparator<Map.Entry<String, Integer>> nonAlphabeticComparator = new Comparator<>() {
+        @Override public int compare(Map.Entry<String, Integer> e1, Map.Entry<String, Integer> e2) {
+            String v1 = e1.getKey();
+            String v2 = e2.getKey();
 
+            return e1.getValue() - e2.getValue();
+        }
+    };
+
+    static Double getRatingAverageForShow(Map<Integer, List<Double>> seasonRatings) {
         List<Double> seasonAverage = new ArrayList<>();
 
         for (var season : seasonRatings.entrySet()) {
             if (season.getValue().size() > 0) {
-                seasonAverage.add(season.getValue().stream().reduce(0.0, Double::sum) / seasonRatings.size());
+                seasonAverage.add(season.getValue().stream().reduce(0.0, Double::sum) / season.getValue().size());
             }
         }
 
         seasonAverage = seasonAverage.stream().filter( a -> a != 0).collect(Collectors.toList());
 
-        return seasonAverage.stream().reduce(0.0, Double::sum) / seasonAverage.size();
+        if (seasonAverage.size() == 0) { return 0.0; }
+
+        return seasonAverage.stream().reduce(0.0, Double::sum) / seasonRatings.size();
     }
 
     static Map<String, Double> getMapKeyTitleValueAverageRatings(Map<String, Map<Integer, List<Double>>> moviesRatings) {
@@ -55,10 +65,24 @@ public class Helpers {
 
         for(var entry : moviesRatings.entrySet()) {
             Double average = getRatingAverageForShow(entry.getValue());
-            averageRatings.put(entry.getKey(), average);
+            if (average != 0.0) {
+                averageRatings.put(entry.getKey(), average);
+            }
         }
 
         return averageRatings;
+    }
+
+    static boolean isPremium(List<UserInputData> users, String actionUser) {
+        for (UserInputData user : users) {
+            if (user.getUsername().equals(actionUser)) {
+                if (!user.getSubscriptionType().equals("PREMIUM")) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 }
